@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Produk</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+  <div class="max-w-4xl mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-6">📦 Admin Produk</h1>
+
+    <!-- Form Tambah/Edit Produk -->
+    <form id="form-produk" class="bg-white p-6 rounded-lg shadow mb-8">
+      <input type="hidden" id="id-produk">
+
+      <div class="mb-4">
+        <label class="block text-sm font-semibold">Nama Produk</label>
+        <input type="text" id="nama" class="w-full border rounded px-3 py-2">
+      </div>
+
+      <div class="mb-4">
+        <label class="block text-sm font-semibold">Deskripsi</label>
+        <textarea id="deskripsi" class="w-full border rounded px-3 py-2"></textarea>
+      </div>
+
+      <div class="mb-4 grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-semibold">Harga Jual</label>
+          <input type="number" id="harga_jual" class="w-full border rounded px-3 py-2">
+        </div>
+        <div>
+          <label class="block text-sm font-semibold">Harga Diskon (opsional)</label>
+          <input type="number" id="harga_diskon" class="w-full border rounded px-3 py-2">
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <label class="block text-sm font-semibold">Kategori</label>
+        <select id="kategori" class="w-full border rounded px-3 py-2">
+          <option value="best">Best Seller</option>
+          <option value="madu">Madu</option>
+          <option value="herbal">Herbal Lain</option>
+        </select>
+      </div>
+
+      <div class="mb-4">
+        <label class="block text-sm font-semibold">URL Gambar</label>
+        <input type="text" id="gambar" class="w-full border rounded px-3 py-2">
+      </div>
+
+      <button type="submit" class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700">
+        Simpan Produk
+      </button>
+      <button type="button" id="reset-form" class="ml-2 bg-gray-400 text-white px-6 py-2 rounded hover:bg-gray-500">
+        Reset
+      </button>
+    </form>
+
+    <!-- Daftar Produk -->
+    <h2 class="text-xl font-bold mb-4">Daftar Produk</h2>
+    <div id="list-produk" class="grid gap-4"></div>
+  </div>
+
+  <!-- Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDyx3hfM_49dQPWrYeKBuZ_5umRPGvTjLI",
+      authDomain: "greciaexperiment.firebaseapp.com",
+      projectId: "greciaexperiment",
+      storageBucket: "greciaexperiment.firebasestorage.app",
+      messagingSenderId: "449936532510",
+      appId: "1:449936532510:web:9186754bceb92884c63a0f"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const form = document.getElementById("form-produk");
+    const resetBtn = document.getElementById("reset-form");
+    const listProduk = document.getElementById("list-produk");
+
+    // Simpan Produk
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const id = document.getElementById("id-produk").value;
+      const data = {
+        nama: document.getElementById("nama").value,
+        deskripsi: document.getElementById("deskripsi").value,
+        harga_jual: parseInt(document.getElementById("harga_jual").value),
+        harga_diskon: parseInt(document.getElementById("harga_diskon").value) || null,
+        kategori: document.getElementById("kategori").value,
+        gambar: document.getElementById("gambar").value,
+      };
+
+      if (id) {
+        // update
+        const ref = doc(db, "produk", id);
+        await updateDoc(ref, data);
+      } else {
+        // tambah
+        await addDoc(collection(db, "produk"), data);
+      }
+
+      form.reset();
+      document.getElementById("id-produk").value = "";
+      loadProduk();
+    });
+
+    resetBtn.addEventListener("click", () => {
+      form.reset();
+      document.getElementById("id-produk").value = "";
+    });
+
+    // Render Produk
+    async function loadProduk() {
+      listProduk.innerHTML = "";
+      const querySnapshot = await getDocs(collection(db, "produk"));
+      querySnapshot.forEach((docSnap) => {
+        const p = docSnap.data();
+        const id = docSnap.id;
+
+        const div = document.createElement("div");
+        div.className = "bg-white p-4 rounded shadow flex items-center justify-between";
+
+        div.innerHTML = `
+          <div>
+            <h3 class="font-bold">${p.nama}</h3>
+            <p class="text-sm text-gray-500">Rp ${p.harga_jual.toLocaleString()}</p>
+            <p class="text-xs">Kategori: ${p.kategori}</p>
+          </div>
+          <div class="space-x-2">
+            <button onclick="editProduk('${id}', '${p.nama}', '${p.deskripsi || ""}', ${p.harga_jual}, ${p.harga_diskon || 0}, '${p.kategori}', '${p.gambar || ""}')" 
+              class="bg-blue-500 text-white px-3 py-1 rounded text-sm">Edit</button>
+            <button onclick="hapusProduk('${id}')" 
+              class="bg-red-500 text-white px-3 py-1 rounded text-sm">Hapus</button>
+          </div>
+        `;
+        listProduk.appendChild(div);
+      });
+    }
+
+    // Edit Produk
+    window.editProduk = function(id, nama, deskripsi, harga_jual, harga_diskon, kategori, gambar) {
+      document.getElementById("id-produk").value = id;
+      document.getElementById("nama").value = nama;
+      document.getElementById("deskripsi").value = deskripsi;
+      document.getElementById("harga_jual").value = harga_jual;
+      document.getElementById("harga_diskon").value = harga_diskon || "";
+      document.getElementById("kategori").value = kategori;
+      document.getElementById("gambar").value = gambar;
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    // Hapus Produk
+    window.hapusProduk = async function(id) {
+      if (confirm("Yakin mau hapus produk ini?")) {
+        await deleteDoc(doc(db, "produk", id));
+        loadProduk();
+      }
+    }
+
+    loadProduk();
+  </script>
+</body>
+</html>
