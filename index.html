@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Produk - CRUD</title>
+  <title>Admin Produk</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50 text-gray-800">
@@ -66,18 +66,20 @@
 
     // 🔑 Config Firebase
     const firebaseConfig = {
-      apiKey: "API_KEY",
-      authDomain: "PROJECT_ID.firebaseapp.com",
-      projectId: "PROJECT_ID",
-      storageBucket: "PROJECT_ID.appspot.com",
-      messagingSenderId: "SENDER_ID",
-      appId: "APP_ID"
+      apiKey: "AIzaSyDyx3hfM_49dQPWrYeKBuZ_5umRPGvTjLI",
+      authDomain: "greciaexperiment.firebaseapp.com",
+      projectId: "greciaexperiment",
+      storageBucket: "greciaexperiment.firebasestorage.app",
+      messagingSenderId: "449936532510",
+      appId: "1:449936532510:web:9186754bceb92884c63a0f",
+      measurementId: "G-5R08SBGN4N"
     };
+
     const app = initializeApp(firebaseConfig);
     const db  = getFirestore(app);
 
     // 🔑 Imgur Client-ID
-    const IMGUR_CLIENT_ID = "YOUR_IMGUR_CLIENT_ID";
+    const IMGUR_CLIENT_ID = "YOUR_IMGUR_CLIENT_ID"; // ganti dengan Client-ID dari Imgur
 
     const produkForm = document.getElementById("produkForm");
     const produkList = document.getElementById("produkList");
@@ -87,7 +89,6 @@
     async function uploadToImgur(file) {
       let formData = new FormData();
       formData.append("image", file);
-
       const res = await fetch("https://api.imgur.com/3/image", {
         method: "POST",
         headers: { Authorization: "Client-ID " + IMGUR_CLIENT_ID },
@@ -180,4 +181,19 @@
 
     // 📌 Preview gambar saat pilih file
     document.getElementById("gambar").addEventListener("change", (e) => {
-      const file = e.t
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          preview.src = reader.result;
+          preview.classList.remove("hidden");
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // 🚀 Load awal
+    loadProduk();
+  </script>
+</body>
+</html>
