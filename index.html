@@ -34,12 +34,13 @@
     <div id="produkList" class="grid md:grid-cols-2 gap-4"></div>
   </div>
 
-  <!-- Firebase & Script -->
+  <!-- Firebase Script -->
   <script type="module">
-    // Firebase SDK
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
+    // Firebase Config
     const firebaseConfig = {
       apiKey: "AIzaSyDyx3hfM_49dQPWrYeKBuZ_5umRPGvTjLI",
       authDomain: "greciaexperiment.firebaseapp.com",
@@ -50,34 +51,17 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const db  = getFirestore(app);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
 
     const form = document.getElementById("produkForm");
     const produkList = document.getElementById("produkList");
 
-    // Upload Gambar ke ImageKit
-    async function uploadImage(file) {
-      const reader = new FileReader();
-      return new Promise((resolve, reject) => {
-        reader.readAsDataURL(file);
-        reader.onload = async () => {
-          const base64 = reader.result.split(",")[1];
-          const res = await fetch("https://upload.imagekit.io/api/v1/files/upload", {
-            method: "POST",
-            headers: {
-              Authorization: "Basic " + btoa("private_IDv3dJymY8VKiokWXlip48LLQoU=" + ":"),
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              file: base64,
-              fileName: file.name
-            })
-          });
-          const data = await res.json();
-          resolve(data.url);
-        };
-        reader.onerror = reject;
-      });
+    // Upload gambar ke Storage
+    async function uploadGambar(file) {
+      const storageRef = ref(storage, 'produk/' + Date.now() + '-' + file.name);
+      await uploadBytes(storageRef, file);
+      return await getDownloadURL(storageRef);
     }
 
     // Tambah Produk
@@ -91,7 +75,7 @@
       const file = document.getElementById("gambar").files[0];
 
       let urlGambar = "";
-      if (file) urlGambar = await uploadImage(file);
+      if (file) urlGambar = await uploadGambar(file);
 
       await addDoc(collection(db, "produk"), {
         nama,
@@ -122,16 +106,27 @@
               Rp ${p.harga_diskon ? p.harga_diskon.toLocaleString() : p.harga_jual.toLocaleString()}
             </p>
             <div class="flex space-x-2 mt-2">
-              <button onclick="hapusProduk('${id}')" class="bg-red-500 text-white px-3 py-1 rounded">Hapus</button>
+              <button onclick="hapusProduk('${id}', '${p.gambar}')" class="bg-red-500 text-white px-3 py-1 rounded">Hapus</button>
             </div>
           </div>
         `;
       });
     }
 
-    // Hapus Produk
-    window.hapusProduk = async (id) => {
+    // Hapus Produk (Firestore + Storage)
+    window.hapusProduk = async (id, urlGambar) => {
       await deleteDoc(doc(db, "produk", id));
+
+      // Hapus file dari storage juga
+      if (urlGambar) {
+        try {
+          const imgRef = ref(storage, urlGambar);
+          await deleteObject(imgRef);
+        } catch (err) {
+          console.warn("Gagal hapus gambar:", err);
+        }
+      }
+
       loadProduk();
     };
 
