@@ -38,7 +38,7 @@
   <script type="module">
     // Firebase SDK
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, deleteDoc, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDyx3hfM_49dQPWrYeKBuZ_5umRPGvTjLI",
@@ -65,7 +65,7 @@
           const res = await fetch("https://upload.imagekit.io/api/v1/files/upload", {
             method: "POST",
             headers: {
-              Authorization: "Basic " + btoa("public_QHOqYWEUs10NYDE/kURbKvBmulQ=:"),
+              Authorization: "Basic " + btoa("private_IDv3dJymY8VKiokWXlip48LLQoU=" + ":"),
               "Content-Type": "application/json"
             },
             body: JSON.stringify({
@@ -94,7 +94,12 @@
       if (file) urlGambar = await uploadImage(file);
 
       await addDoc(collection(db, "produk"), {
-        nama, deskripsi, harga_jual: harga, harga_diskon: diskon, kategori, gambar: urlGambar
+        nama,
+        deskripsi,
+        harga_jual: harga,
+        harga_diskon: diskon,
+        kategori,
+        gambar: urlGambar
       });
 
       form.reset();
@@ -113,7 +118,9 @@
             <img src="${p.gambar}" class="w-full h-40 object-cover rounded">
             <h3 class="font-bold mt-2">${p.nama}</h3>
             <p class="text-sm text-gray-500">${p.deskripsi || ""}</p>
-            <p class="text-green-600 font-bold">Rp ${p.harga_diskon ? p.harga_diskon.toLocaleString() : p.harga_jual.toLocaleString()}</p>
+            <p class="text-green-600 font-bold">
+              Rp ${p.harga_diskon ? p.harga_diskon.toLocaleString() : p.harga_jual.toLocaleString()}
+            </p>
             <div class="flex space-x-2 mt-2">
               <button onclick="hapusProduk('${id}')" class="bg-red-500 text-white px-3 py-1 rounded">Hapus</button>
             </div>
