@@ -4,8 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Pelatihan</title>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 p-6">
@@ -23,8 +21,11 @@
     <p id="status" class="mt-4 text-sm text-gray-600"></p>
   </div>
 
-  <script>
-    // Firebase config
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    // Firebase Config
     const firebaseConfig = {
       apiKey: "AIzaSyDyx3hfM_49dQPWrYeKBuZ_5umRPGvTjLI",
       authDomain: "greciaexperiment.firebaseapp.com",
@@ -33,8 +34,10 @@
       messagingSenderId: "449936532510",
       appId: "1:449936532510:web:9186754bceb92884c63a0f",
     };
-    const app = firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+
+    // Init Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
     const imgbbApiKey = "1bb7741f8f4627595478ae86b5e9647c";
 
@@ -58,15 +61,22 @@
         body: formData
       });
       const imgData = await res.json();
+      console.log("ImageBB response:", imgData);
+
+      if (!imgData.success) {
+        status.textContent = "Gagal upload gambar!";
+        return;
+      }
+
       const gambarUrl = imgData.data.url;
 
       // Simpan ke Firestore
-      await db.collection("pelatihan").add({
+      await addDoc(collection(db, "pelatihan"), {
         judul,
         deskripsi,
         tanggal,
         gambarUrl,
-        dibuat: new Date()
+        dibuat: serverTimestamp()
       });
 
       status.textContent = "Pelatihan berhasil diupload!";
