@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Pelatihan</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-6">
+  <div class="max-w-lg mx-auto bg-white p-6 rounded-lg shadow">
+    <h1 class="text-2xl font-bold mb-4">Upload Pelatihan</h1>
+    
+    <form id="pelatihanForm" class="space-y-3">
+      <input type="text" id="judul" placeholder="Judul" class="w-full p-2 border rounded" required>
+      <textarea id="deskripsi" placeholder="Deskripsi" class="w-full p-2 border rounded" required></textarea>
+      <input type="date" id="tanggal" class="w-full p-2 border rounded" required>
+      <input type="file" id="gambar" accept="image/*" class="w-full p-2 border rounded" required>
+      <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Upload</button>
+    </form>
+
+    <p id="status" class="mt-4 text-sm text-gray-600"></p>
+  </div>
+
+  <script>
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyDyx3hfM_49dQPWrYeKBuZ_5umRPGvTjLI",
+      authDomain: "greciaexperiment.firebaseapp.com",
+      projectId: "greciaexperiment",
+      storageBucket: "greciaexperiment.appspot.com",
+      messagingSenderId: "449936532510",
+      appId: "1:449936532510:web:9186754bceb92884c63a0f",
+    };
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const imgbbApiKey = "1bb7741f8f4627595478ae86b5e9647c";
+
+    document.getElementById("pelatihanForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const judul = document.getElementById("judul").value;
+      const deskripsi = document.getElementById("deskripsi").value;
+      const tanggal = document.getElementById("tanggal").value;
+      const gambarFile = document.getElementById("gambar").files[0];
+      const status = document.getElementById("status");
+
+      if (!gambarFile) return alert("Pilih gambar dulu!");
+
+      status.textContent = "Mengupload gambar...";
+
+      // Upload gambar ke ImageBB
+      const formData = new FormData();
+      formData.append("image", gambarFile);
+      const res = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, {
+        method: "POST",
+        body: formData
+      });
+      const imgData = await res.json();
+      const gambarUrl = imgData.data.url;
+
+      // Simpan ke Firestore
+      await db.collection("pelatihan").add({
+        judul,
+        deskripsi,
+        tanggal,
+        gambarUrl,
+        dibuat: new Date()
+      });
+
+      status.textContent = "Pelatihan berhasil diupload!";
+      document.getElementById("pelatihanForm").reset();
+    });
+  </script>
+</body>
+</html>
