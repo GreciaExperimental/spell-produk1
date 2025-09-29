@@ -107,7 +107,7 @@
         let urlGambar = "";
         if (file) urlGambar = await uploadToImgbb(file);
 
-        await addDoc(collection(db, "produk_reseller"), {
+        await addDoc(collection(db, "produk"), {
           nama,
           deskripsi,
           harga_jual: harga,
