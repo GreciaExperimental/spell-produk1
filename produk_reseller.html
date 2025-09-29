@@ -107,7 +107,7 @@
         let urlGambar = "";
         if (file) urlGambar = await uploadToImgbb(file);
 
-        await addDoc(collection(db, "produk"), {
+        await addDoc(collection(db, "produk_reseller"), {
           nama,
           deskripsi,
           harga_jual: harga,
@@ -128,7 +128,7 @@
     // 🚀 Load Produk
     async function loadProduk() {
       produkList.innerHTML = "";
-      const snap = await getDocs(collection(db, "produk"));
+      const snap = await getDocs(collection(db, "produk_reseller"));
       snap.forEach(docSnap => {
         const p = docSnap.data();
         const id = docSnap.id;
